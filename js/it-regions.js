@@ -6,7 +6,7 @@ const addBtn = document.getElementById("add-region-btn");
 
 async function loadRegions() {
   const { data: regions, error } = await supabase
-    .from("it_regions")
+    .from("regions")
     .select("id, name, slug, sort_order")
     .order("sort_order", { ascending: true });
 
@@ -65,10 +65,10 @@ addBtn.addEventListener("click", async () => {
   if (!name || !name.trim()) return;
 
   const slug = slugify(name);
-  const { data: existing } = await supabase.from("it_regions").select("sort_order").order("sort_order", { ascending: false }).limit(1);
+  const { data: existing } = await supabase.from("regions").select("sort_order").order("sort_order", { ascending: false }).limit(1);
   const nextOrder = existing?.[0]?.sort_order ? existing[0].sort_order + 1 : 1;
 
-  const { error } = await supabase.from("it_regions").insert({ name: name.trim(), slug, sort_order: nextOrder });
+  const { error } = await supabase.from("regions").insert({ name: name.trim(), slug, sort_order: nextOrder });
   if (error) {
     showToast(friendlyError(error), { error: true });
     return;
