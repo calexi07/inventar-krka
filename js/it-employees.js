@@ -1,5 +1,5 @@
 import { supabase } from "./supabase-client.js";
-import { el, showToast, friendlyError } from "./ui-utils.js";
+import { el, showToast, friendlyError, downloadGroupsAsZip } from "./ui-utils.js";
 
 const params = new URLSearchParams(location.search);
 const regionSlug = params.get("region");
@@ -9,8 +9,10 @@ const titleEl = document.getElementById("region-title");
 const crumbEl = document.getElementById("crumb-region");
 const addBtn = document.getElementById("add-employee-btn");
 const progressEl = document.getElementById("verified-progress");
+const downloadBtn = document.getElementById("download-zip-btn");
 
 let currentRegion = null;
+let currentEmployees = [];
 
 async function loadRegionAndEmployees() {
   if (!regionSlug) {
@@ -65,6 +67,7 @@ async function loadRegionAndEmployees() {
 
   const verifiedCount = employees.filter((e) => e.verified).length;
   progressEl.textContent = `${verifiedCount}/${employees.length} verificați`;
+  currentEmployees = employees;
 
   for (const emp of employees) {
     list.appendChild(
@@ -106,6 +109,60 @@ addBtn.addEventListener("click", async () => {
   }
   showToast(`"${name.trim()}" a fost adăugat.`);
   loadRegionAndEmployees();
+});
+
+downloadBtn.addEventListener("click", async () => {
+  if (!currentRegion || currentEmployees.length === 0) {
+    showToast("Nu există angajați de descărcat în această regiune.", { error: true });
+    return;
+  }
+
+  downloadBtn.disabled = true;
+  const originalText = downloadBtn.textContent;
+  downloadBtn.textContent = "Se pregătește arhiva…";
+
+  try {
+    const groups = [];
+    for (const emp of currentEmployees) {
+      const { data: photos, error } = await supabase
+        .from("it_employee_photos")
+        .select("storage_path, file_name")
+        .eq("employee_id", emp.id);
+
+      if (error || !photos || photos.length === 0) continue;
+
+      const paths = photos.map((p) => p.storage_path);
+      const { data: signed } = await supabase.storage.from("it-photos").createSignedUrls(paths, 300);
+      if (!signed) continue;
+
+      const urlByPath = {};
+      for (const s of signed) if (s.signedUrl) urlByPath[s.path] = s.signedUrl;
+
+      const files = photos
+        .filter((p) => urlByPath[p.storage_path])
+        .map((p, i) => ({ url: urlByPath[p.storage_path], fileName: p.file_name || `poza-${i + 1}.jpg` }));
+
+      if (files.length > 0) groups.push({ folderName: emp.full_name, files });
+    }
+
+    if (groups.length === 0) {
+      showToast("Nicio poză de descărcat în această regiune.", { error: true });
+      return;
+    }
+
+    await downloadGroupsAsZip({
+      zipFileName: `${currentRegion.name}.zip`,
+      groups,
+      onProgress: (done, total) => { downloadBtn.textContent = `Se descarcă ${done}/${total}…`; },
+    });
+
+    showToast("Arhiva a fost descărcată.");
+  } catch (err) {
+    showToast(friendlyError(err), { error: true });
+  } finally {
+    downloadBtn.disabled = false;
+    downloadBtn.textContent = originalText;
+  }
 });
 
 loadRegionAndEmployees();
