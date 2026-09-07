@@ -36,16 +36,28 @@
       </div>
     </div>
 
-    <label id="dropzone" class="dropzone block mb-6 cursor-pointer" for="file-input">
-      <p class="font-medium">Trage poze aici sau apasă pentru a alege</p>
-      <p class="text-xs mt-1">JPG, PNG — se pot încărca mai multe simultan</p>
-      <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
-    </label>
+    <div class="mb-6 flex flex-col sm:flex-row gap-3">
+      <label id="dropzone" for="file-input" class="dropzone flex-1 cursor-pointer flex flex-col items-center justify-center">
+        <p class="font-medium">Alege din galerie</p>
+        <p class="text-xs mt-1">Trage poze aici sau apasă pentru a alege — se pot alege mai multe</p>
+        <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
+      </label>
+      <label for="camera-input" class="dropzone flex-1 cursor-pointer flex flex-col items-center justify-center">
+        <p class="font-medium">Fă o poză</p>
+        <p class="text-xs mt-1">Deschide camera telefonului</p>
+        <input id="camera-input" type="file" accept="image/*" capture="environment" class="hidden" />
+      </label>
+    </div>
 
     <div id="photos-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
       <div class="skeleton photo-tile"></div>
       <div class="skeleton photo-tile"></div>
     </div>
+  </div>
+
+  <div id="lightbox" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-40 p-4" role="dialog" aria-modal="true">
+    <button id="lightbox-close" class="absolute top-4 right-4 text-white text-2xl leading-none" aria-label="Închide">&times;</button>
+    <img id="lightbox-img" src="" alt="" class="max-w-full max-h-full rounded-lg" />
   </div>
 
   <script type="module" src="../js/it-employee-detail.js"></script>
