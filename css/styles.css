@@ -1,0 +1,181 @@
+:root {
+  --paper: #eceeef;
+  --panel: #ffffff;
+  --ink: #1b1e24;
+  --ink-soft: #5b616b;
+  --line: #d7dade;
+  --accent: #34506b;
+  --accent-ink: #ffffff;
+  --tab: #a47c3b;
+  --tab-soft: #f1e6d2;
+  --danger: #a23b3b;
+  --danger-soft: #f5e4e4;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+/* Folder-tab card: a manila-folder silhouette, used for region cards.
+   The tab is a real structural cue here (this app's content literally
+   is folders of people), not decoration. */
+.folder-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px 10px 10px 10px;
+  padding: 1.5rem 1.25rem 1.25rem;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.folder-card::before {
+  content: "";
+  position: absolute;
+  top: -0.65rem;
+  left: 0;
+  width: 3.25rem;
+  height: 0.75rem;
+  background: var(--tab);
+  border-radius: 4px 8px 0 0;
+}
+
+.folder-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.folder-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  background: var(--tab-soft);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 6px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  transition: background 0.15s ease;
+}
+.btn-primary:hover { background: #2a4054; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-ghost {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  background: transparent;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.btn-ghost:hover { border-color: var(--accent); background: #f3f5f7; }
+
+.btn-danger-ghost {
+  color: var(--danger);
+  border: 1px solid var(--danger-soft);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+  background: var(--danger-soft);
+}
+.btn-danger-ghost:hover { background: #eecccc; }
+
+.crumb {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+.crumb a { color: var(--accent); text-decoration: none; }
+.crumb a:hover { text-decoration: underline; }
+
+.field-input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+  width: 100%;
+  background: var(--panel);
+}
+.field-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.photo-tile {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel);
+  aspect-ratio: 1 / 1;
+}
+.photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dropzone {
+  border: 1.5px dashed var(--line);
+  border-radius: 10px;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--ink-soft);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.dropzone.dragging {
+  border-color: var(--accent);
+  background: #f3f5f7;
+}
+
+.empty-state {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #e4e6e9 25%, #edeef0 37%, #e4e6e9 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.toast {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  background: var(--ink);
+  color: #fff;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  z-index: 50;
+}
+.toast.error { background: var(--danger); }

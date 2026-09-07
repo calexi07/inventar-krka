@@ -1,0 +1,234 @@
+import { supabase } from "./supabase-client.js";
+import { el, showToast, friendlyError } from "./ui-utils.js";
+
+const params = new URLSearchParams(location.search);
+const employeeId = params.get("id");
+const regionSlug = params.get("region");
+
+const titleEl = document.getElementById("employee-title");
+const crumbRegion = document.getElementById("crumb-region");
+const crumbEmployee = document.getElementById("crumb-employee");
+const grid = document.getElementById("photos-grid");
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("file-input");
+const verifiedCheckbox = document.getElementById("verified-checkbox");
+const notesField = document.getElementById("notes-field");
+const saveNotesBtn = document.getElementById("save-notes-btn");
+const notesStatus = document.getElementById("notes-status");
+
+const SIGNED_URL_TTL = 60 * 60; // 1 hour
+
+let employee = null;
+
+async function init() {
+  if (!employeeId) {
+    titleEl.textContent = "Angajat negăsit";
+    return;
+  }
+
+  const { data: emp, error } = await supabase
+    .from("it_employees")
+    .select("id, full_name, region_id, verified, notes, it_regions(name, slug)")
+    .eq("id", employeeId)
+    .single();
+
+  if (error || !emp) {
+    titleEl.textContent = "Angajat negăsit";
+    grid.innerHTML = "";
+    grid.appendChild(el("div", { class: "empty-state col-span-full", text: "Acest angajat nu există." }));
+    return;
+  }
+
+  employee = emp;
+  titleEl.textContent = emp.full_name;
+  crumbEmployee.textContent = emp.full_name;
+  document.title = `IT — ${emp.full_name}`;
+
+  const slug = emp.it_regions?.slug || regionSlug;
+  crumbRegion.textContent = emp.it_regions?.name || "Regiune";
+  crumbRegion.href = `region.html?region=${encodeURIComponent(slug)}`;
+
+  verifiedCheckbox.checked = !!emp.verified;
+  notesField.value = emp.notes || "";
+
+  await loadPhotos();
+}
+
+async function toggleVerified() {
+  const nextValue = verifiedCheckbox.checked;
+  const { error } = await supabase
+    .from("it_employees")
+    .update({ verified: nextValue, verified_at: nextValue ? new Date().toISOString() : null })
+    .eq("id", employeeId);
+
+  if (error) {
+    verifiedCheckbox.checked = !nextValue; // revert on failure
+    showToast(friendlyError(error), { error: true });
+    return;
+  }
+
+  employee.verified = nextValue;
+  showToast(nextValue ? "Marcat ca verificat." : "Marcat ca neverificat.");
+}
+
+async function saveNotes() {
+  saveNotesBtn.disabled = true;
+  notesStatus.textContent = "Se salvează…";
+
+  const { error } = await supabase
+    .from("it_employees")
+    .update({ notes: notesField.value })
+    .eq("id", employeeId);
+
+  saveNotesBtn.disabled = false;
+
+  if (error) {
+    notesStatus.textContent = "";
+    showToast(friendlyError(error), { error: true });
+    return;
+  }
+
+  notesStatus.textContent = "Salvat.";
+  setTimeout(() => { notesStatus.textContent = ""; }, 2000);
+}
+
+verifiedCheckbox.addEventListener("change", toggleVerified);
+saveNotesBtn.addEventListener("click", saveNotes);
+
+async function loadPhotos() {
+  const { data: photos, error } = await supabase
+    .from("it_employee_photos")
+    .select("id, storage_path, file_name, uploaded_at")
+    .eq("employee_id", employeeId)
+    .order("uploaded_at", { ascending: false });
+
+  grid.innerHTML = "";
+
+  if (error) {
+    grid.appendChild(el("div", { class: "empty-state col-span-full", text: friendlyError(error) }));
+    return;
+  }
+
+  if (!photos || photos.length === 0) {
+    grid.appendChild(
+      el("div", { class: "empty-state col-span-full" }, [
+        el("p", { class: "font-medium mb-1", text: "Nicio poză încă" }),
+        el("p", { class: "text-sm", text: "Încarcă prima poză mai sus." }),
+      ])
+    );
+    return;
+  }
+
+  const paths = photos.map((p) => p.storage_path);
+  const { data: signed, error: signError } = await supabase.storage
+    .from("it-photos")
+    .createSignedUrls(paths, SIGNED_URL_TTL);
+
+  if (signError) {
+    grid.appendChild(el("div", { class: "empty-state col-span-full", text: friendlyError(signError) }));
+    return;
+  }
+
+  const urlByPath = {};
+  for (const s of signed || []) {
+    if (s.signedUrl) urlByPath[s.path] = s.signedUrl;
+  }
+
+  for (const photo of photos) {
+    const url = urlByPath[photo.storage_path];
+    const tile = el("div", { class: "photo-tile group" }, [
+      url ? el("img", { src: url, alt: photo.file_name, loading: "lazy" }) : null,
+      el(
+        "button",
+        {
+          class: "btn-danger-ghost absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity",
+          onClick: () => deletePhoto(photo),
+          "aria-label": "Șterge poza",
+        },
+        "Șterge"
+      ),
+    ]);
+    grid.appendChild(tile);
+  }
+}
+
+async function deletePhoto(photo) {
+  if (!confirm("Ștergi această poză? Nu poate fi anulat.")) return;
+
+  const { error: storageError } = await supabase.storage.from("it-photos").remove([photo.storage_path]);
+  if (storageError) {
+    showToast(friendlyError(storageError), { error: true });
+    return;
+  }
+
+  const { error: dbError } = await supabase.from("it_employee_photos").delete().eq("id", photo.id);
+  if (dbError) {
+    showToast(friendlyError(dbError), { error: true });
+    return;
+  }
+
+  showToast("Poza a fost ștearsă.");
+  loadPhotos();
+}
+
+async function uploadFiles(files) {
+  if (!employee || !files || files.length === 0) return;
+
+  const imageFiles = [...files].filter((f) => f.type.startsWith("image/"));
+  if (imageFiles.length === 0) {
+    showToast("Te rog alege fișiere imagine.", { error: true });
+    return;
+  }
+
+  showToast(`Se încarcă ${imageFiles.length} ${imageFiles.length === 1 ? "poză" : "poze"}...`);
+
+  let successCount = 0;
+  for (const file of imageFiles) {
+    const ext = file.name.split(".").pop();
+    const safeName = `${crypto.randomUUID()}.${ext}`;
+    const path = `${employee.it_regions?.slug || regionSlug}/${employee.id}/${safeName}`;
+
+    const { error: uploadError } = await supabase.storage.from("it-photos").upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+    if (uploadError) {
+      showToast(`Eroare la "${file.name}": ${friendlyError(uploadError)}`, { error: true });
+      continue;
+    }
+
+    const { error: dbError } = await supabase.from("it_employee_photos").insert({
+      employee_id: employee.id,
+      storage_path: path,
+      file_name: file.name,
+    });
+
+    if (dbError) {
+      showToast(`Eroare la salvarea "${file.name}": ${friendlyError(dbError)}`, { error: true });
+      continue;
+    }
+
+    successCount++;
+  }
+
+  if (successCount > 0) {
+    showToast(`${successCount} ${successCount === 1 ? "poză încărcată" : "poze încărcate"}.`);
+    loadPhotos();
+  }
+}
+
+fileInput.addEventListener("change", (e) => uploadFiles(e.target.files));
+
+dropzone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropzone.classList.add("dragging");
+});
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragging"));
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropzone.classList.remove("dragging");
+  uploadFiles(e.dataTransfer.files);
+});
+
+init();

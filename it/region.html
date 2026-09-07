@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IT — Angajați</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="min-h-screen px-6 py-8">
+  <div class="max-w-4xl mx-auto">
+    <nav class="crumb mb-6"><a href="../index.html">Inventar</a> / <a href="index.html">IT</a> / <span id="crumb-region">…</span></nav>
+
+    <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
+      <div>
+        <h1 id="region-title" class="font-display text-3xl font-semibold">…</h1>
+        <p class="text-[var(--ink-soft)] text-sm mt-1">
+          Alege un angajat pentru a vedea pozele.
+          <span id="verified-progress" class="chip ml-2"></span>
+        </p>
+      </div>
+      <button id="add-employee-btn" class="btn-ghost">+ Angajat nou</button>
+    </div>
+
+    <div id="employees-list" class="grid sm:grid-cols-2 gap-3">
+      <div class="skeleton h-14"></div>
+      <div class="skeleton h-14"></div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/it-employees.js"></script>
+</body>
+</html>
