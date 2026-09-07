@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Auto — Regiuni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="min-h-screen px-6 py-8">
+  <div class="max-w-5xl mx-auto">
+    <nav class="crumb mb-6"><a href="../index.html">Inventar</a> / Auto</nav>
+
+    <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
+      <div>
+        <h1 class="font-display text-3xl font-semibold">Regiuni Auto</h1>
+        <p class="text-[var(--ink-soft)] text-sm mt-1">Alege o regiune pentru a vedea mașinile.</p>
+      </div>
+      <button id="add-region-btn" class="btn-ghost">+ Regiune nouă</button>
+    </div>
+
+    <div id="regions-grid" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div class="skeleton h-28"></div>
+      <div class="skeleton h-28"></div>
+      <div class="skeleton h-28"></div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/auto-regions.js"></script>
+</body>
+</html>
