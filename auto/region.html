@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="stylesheet" href="../css/styles.css" />
 </head>
 <body class="min-h-screen px-6 py-8">
@@ -21,7 +22,10 @@
           <span id="verified-progress" class="chip ml-2"></span>
         </p>
       </div>
-      <button id="add-vehicle-btn" class="btn-ghost">+ Mașină nouă</button>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="add-vehicle-btn" class="btn-ghost">+ Mașină nouă</button>
+        <button id="download-zip-btn" class="btn-primary">Descarcă toate pozele (ZIP)</button>
+      </div>
     </div>
 
     <div id="vehicles-list" class="grid sm:grid-cols-2 gap-3">
