@@ -51,11 +51,10 @@ export async function downloadGroupsAsZip({ zipFileName, groups, onProgress }) {
   let done = 0;
 
   for (const group of groups) {
-    const folder = zip.folder(group.folderName);
     for (const file of group.files) {
       const response = await fetch(file.url);
       const blob = await response.blob();
-      folder.file(file.fileName, blob);
+      zip.file(`${group.folderName}/${file.fileName}`, blob);
       done++;
       onProgress?.(done, total);
     }
