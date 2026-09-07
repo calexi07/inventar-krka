@@ -39,3 +39,35 @@ export function friendlyError(err) {
   if (err?.message?.includes("Failed to fetch")) return "Network problem — check your connection and try again.";
   return "Something went wrong. Please try again.";
 }
+
+/**
+ * Downloads a set of file groups (e.g. one group per employee/vehicle) as a
+ * single ZIP, with each group becoming a folder inside the archive.
+ * groups: [{ folderName: string, files: [{ url: string, fileName: string }] }]
+ */
+export async function downloadGroupsAsZip({ zipFileName, groups, onProgress }) {
+  const zip = new JSZip();
+  const total = groups.reduce((sum, g) => sum + g.files.length, 0);
+  let done = 0;
+
+  for (const group of groups) {
+    const folder = zip.folder(group.folderName);
+    for (const file of group.files) {
+      const response = await fetch(file.url);
+      const blob = await response.blob();
+      folder.file(file.fileName, blob);
+      done++;
+      onProgress?.(done, total);
+    }
+  }
+
+  const content = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(content);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = zipFileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
