@@ -32,7 +32,7 @@ async function init() {
 
   const { data: emp, error } = await supabase
     .from("it_employees")
-    .select("id, full_name, region_id, verified, notes, it_regions(name, slug)")
+    .select("id, full_name, region_id, verified, notes, regions(name, slug)")
     .eq("id", employeeId)
     .single();
 
@@ -48,8 +48,8 @@ async function init() {
   crumbEmployee.textContent = emp.full_name;
   document.title = `IT — ${emp.full_name}`;
 
-  const slug = emp.it_regions?.slug || regionSlug;
-  crumbRegion.textContent = emp.it_regions?.name || "Regiune";
+  const slug = emp.regions?.slug || regionSlug;
+  crumbRegion.textContent = emp.regions?.name || "Regiune";
   crumbRegion.href = `region.html?region=${encodeURIComponent(slug)}`;
 
   verifiedCheckbox.checked = !!emp.verified;
@@ -219,7 +219,7 @@ async function uploadFiles(files) {
   for (const file of imageFiles) {
     const ext = file.name.split(".").pop();
     const safeName = `${crypto.randomUUID()}.${ext}`;
-    const path = `${employee.it_regions?.slug || regionSlug}/${employee.id}/${safeName}`;
+    const path = `${employee.regions?.slug || regionSlug}/${employee.id}/${safeName}`;
 
     const { error: uploadError } = await supabase.storage.from("it-photos").upload(path, file, {
       cacheControl: "3600",
