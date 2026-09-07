@@ -11,10 +11,14 @@ const crumbEmployee = document.getElementById("crumb-employee");
 const grid = document.getElementById("photos-grid");
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("file-input");
+const cameraInput = document.getElementById("camera-input");
 const verifiedCheckbox = document.getElementById("verified-checkbox");
 const notesField = document.getElementById("notes-field");
 const saveNotesBtn = document.getElementById("save-notes-btn");
 const notesStatus = document.getElementById("notes-status");
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+const lightboxClose = document.getElementById("lightbox-close");
 
 const SIGNED_URL_TTL = 60 * 60; // 1 hour
 
@@ -137,12 +141,20 @@ async function loadPhotos() {
   for (const photo of photos) {
     const url = urlByPath[photo.storage_path];
     const tile = el("div", { class: "photo-tile group" }, [
-      url ? el("img", { src: url, alt: photo.file_name, loading: "lazy" }) : null,
+      url
+        ? el("img", {
+            src: url,
+            alt: photo.file_name,
+            loading: "lazy",
+            class: "cursor-zoom-in",
+            onClick: () => openLightbox(url, photo.file_name),
+          })
+        : null,
       el(
         "button",
         {
           class: "btn-danger-ghost absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity",
-          onClick: () => deletePhoto(photo),
+          onClick: (e) => { e.stopPropagation(); deletePhoto(photo); },
           "aria-label": "Șterge poza",
         },
         "Șterge"
@@ -151,6 +163,27 @@ async function loadPhotos() {
     grid.appendChild(tile);
   }
 }
+
+function openLightbox(url, altText) {
+  lightboxImg.src = url;
+  lightboxImg.alt = altText || "";
+  lightbox.classList.remove("hidden");
+  lightbox.classList.add("flex");
+}
+
+function closeLightbox() {
+  lightbox.classList.add("hidden");
+  lightbox.classList.remove("flex");
+  lightboxImg.src = "";
+}
+
+lightboxClose.addEventListener("click", closeLightbox);
+lightbox.addEventListener("click", (e) => {
+  if (e.target === lightbox) closeLightbox();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeLightbox();
+});
 
 async function deletePhoto(photo) {
   if (!confirm("Ștergi această poză? Nu poate fi anulat.")) return;
@@ -216,9 +249,12 @@ async function uploadFiles(files) {
     showToast(`${successCount} ${successCount === 1 ? "poză încărcată" : "poze încărcate"}.`);
     loadPhotos();
   }
+  fileInput.value = "";
+  cameraInput.value = "";
 }
 
 fileInput.addEventListener("change", (e) => uploadFiles(e.target.files));
+cameraInput.addEventListener("change", (e) => uploadFiles(e.target.files));
 
 dropzone.addEventListener("dragover", (e) => {
   e.preventDefault();
