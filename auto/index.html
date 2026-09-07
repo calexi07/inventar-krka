@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="stylesheet" href="../css/styles.css" />
 </head>
 <body class="min-h-screen px-6 py-8">
@@ -18,7 +19,10 @@
         <h1 class="font-display text-3xl font-semibold">Regiuni Auto</h1>
         <p class="text-[var(--ink-soft)] text-sm mt-1">Alege o regiune pentru a vedea mașinile.</p>
       </div>
-      <button id="add-region-btn" class="btn-ghost">+ Regiune nouă</button>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="add-region-btn" class="btn-ghost">+ Regiune nouă</button>
+        <button id="download-all-zip-btn" class="btn-primary">Descarcă tot (ZIP)</button>
+      </div>
     </div>
 
     <div id="regions-grid" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
