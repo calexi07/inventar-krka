@@ -20,7 +20,7 @@ async function loadRegionAndEmployees() {
   }
 
   const { data: region, error: regionError } = await supabase
-    .from("it_regions")
+    .from("regions")
     .select("id, name, slug")
     .eq("slug", regionSlug)
     .single();
