@@ -1,55 +1,117 @@
+/* ==========================================================================
+   Inventar Companie — "Aurora" theme
+   Deep-space background, glass panels, and one hue per folder card so every
+   region / person / vehicle gets its own color. Class names are unchanged
+   from the previous theme, so only this file needs replacing.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap");
+
 :root {
-  --paper: #eceeef;
-  --panel: #ffffff;
-  --ink: #1b1e24;
-  --ink-soft: #5b616b;
-  --line: #d7dade;
-  --accent: #34506b;
-  --accent-ink: #ffffff;
-  --tab: #a47c3b;
-  --tab-soft: #f1e6d2;
-  --danger: #a23b3b;
-  --danger-soft: #f5e4e4;
+  --paper: #0a0920;
+  --panel: rgba(255, 255, 255, 0.05);
+  --ink: #eef0ff;
+  --ink-soft: #a3a8cf;
+  --line: rgba(255, 255, 255, 0.16);
+  --accent: #5ee3ff;
+  --accent-ink: #07061a;
+  --tab: #8b5cf6;
+  --tab-soft: rgba(139, 92, 246, 0.2);
+  --danger: #ff7a90;
+  --danger-soft: rgba(255, 90, 120, 0.16);
+  --glow-a: #6d4aff;
+  --glow-b: #00d4ff;
+  --glow-c: #ff3d9a;
 }
 
 * { box-sizing: border-box; }
 
+html { color-scheme: dark; }
+
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-family: "Manrope", system-ui, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Aurora glow + faint tech grid, fixed behind everything */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(60rem 38rem at 12% -8%, rgba(109, 74, 255, 0.45), transparent 60%),
+    radial-gradient(48rem 34rem at 95% 8%, rgba(0, 212, 255, 0.28), transparent 60%),
+    radial-gradient(52rem 40rem at 70% 108%, rgba(255, 61, 154, 0.26), transparent 60%),
+    var(--paper);
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 20%, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 20%, #000 20%, transparent 75%);
+  pointer-events: none;
 }
 
 .font-display {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Sora", "Manrope", system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
-/* Folder-tab card: a manila-folder silhouette, used for region cards.
-   The tab is a real structural cue here (this app's content literally
-   is folders of people), not decoration. */
+h1.font-display {
+  background: linear-gradient(100deg, #ffffff 30%, #b9c4ff 70%, #8fe9ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Folder card — glass panel with a glowing tab.
+   Each card in a list takes the next hue, so regions, people and vehicles
+   are told apart by color at a glance.
+   -------------------------------------------------------------------------- */
 .folder-card {
+  --h: 255;
   position: relative;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 2px 10px 10px 10px;
+  background:
+    linear-gradient(150deg, hsl(var(--h) 90% 65% / 0.16), rgba(255, 255, 255, 0.035) 60%);
+  border: 1px solid hsl(var(--h) 90% 75% / 0.28);
+  border-radius: 4px 18px 18px 18px;
   padding: 1.5rem 1.25rem 1.25rem;
-  transition: border-color 0.15s ease, transform 0.1s ease;
+  color: var(--ink);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .folder-card::before {
   content: "";
   position: absolute;
-  top: -0.65rem;
-  left: 0;
-  width: 3.25rem;
-  height: 0.75rem;
-  background: var(--tab);
-  border-radius: 4px 8px 0 0;
+  top: -0.7rem;
+  left: -1px;
+  width: 3.6rem;
+  height: 0.8rem;
+  background: linear-gradient(90deg, hsl(var(--h) 95% 62%), hsl(calc(var(--h) + 45) 95% 66%));
+  border-radius: 6px 10px 0 0;
+  box-shadow: 0 -4px 18px hsl(var(--h) 100% 60% / 0.45);
 }
 
-.folder-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
+a.folder-card:hover,
+label.folder-card:hover {
+  transform: translateY(-3px);
+  border-color: hsl(var(--h) 95% 78% / 0.7);
+  box-shadow:
+    0 14px 40px -14px hsl(var(--h) 100% 60% / 0.65),
+    inset 0 0 28px hsl(var(--h) 100% 70% / 0.08);
 }
 
 .folder-card:focus-visible {
@@ -57,75 +119,147 @@ body {
   outline-offset: 3px;
 }
 
+/* Hue cycle across siblings */
+.folder-card:nth-child(6n + 1) { --h: 255; } /* violet  */
+.folder-card:nth-child(6n + 2) { --h: 190; } /* cyan    */
+.folder-card:nth-child(6n + 3) { --h: 328; } /* magenta */
+.folder-card:nth-child(6n + 4) { --h: 160; } /* mint    */
+.folder-card:nth-child(6n + 5) { --h: 18;  } /* coral   */
+.folder-card:nth-child(6n + 6) { --h: 45;  } /* amber   */
+
+/* A little more row space so each card's tab doesn't touch the card above */
+#regions-grid, #employees-list, #vehicles-list { row-gap: 1.15rem; }
+
+/* Brighter "verified" dot */
+.folder-card .bg-emerald-600 {
+  background: #36f2a6;
+  box-shadow: 0 0 10px 1px rgba(54, 242, 166, 0.8);
+}
+
+/* The "Verificat" toggle card on detail pages keeps a calm single hue */
+label.folder-card { --h: 160; }
+
+/* --------------------------------------------------------------------------
+   Chips
+   -------------------------------------------------------------------------- */
 .chip {
+  --h: 190;
   display: inline-flex;
   align-items: center;
   font-size: 0.75rem;
-  color: var(--ink-soft);
-  background: var(--tab-soft);
+  font-weight: 600;
+  color: hsl(var(--h) 100% 88%);
+  background: hsl(var(--h) 90% 60% / 0.18);
+  border: 1px solid hsl(var(--h) 90% 70% / 0.3);
   border-radius: 999px;
-  padding: 0.15rem 0.6rem;
+  padding: 0.18rem 0.7rem;
 }
 
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
 .btn-primary {
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-radius: 6px;
-  padding: 0.55rem 1.1rem;
+  background: linear-gradient(110deg, var(--glow-a), var(--glow-b));
+  color: #ffffff;
+  font-weight: 700;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.62rem 1.2rem;
   font-size: 0.9rem;
-  transition: background 0.15s ease;
+  box-shadow: 0 8px 26px -8px rgba(0, 212, 255, 0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
-.btn-primary:hover { background: #2a4054; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 12px 32px -8px rgba(109, 74, 255, 0.8);
+}
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
 .btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--line);
   color: var(--ink);
-  border-radius: 6px;
-  padding: 0.55rem 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.62rem 1.2rem;
   font-size: 0.9rem;
-  background: transparent;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
-.btn-ghost:hover { border-color: var(--accent); background: #f3f5f7; }
+.btn-ghost:hover {
+  border-color: var(--accent);
+  background: rgba(94, 227, 255, 0.1);
+  box-shadow: 0 0 22px -6px rgba(94, 227, 255, 0.55);
+}
+.btn-ghost:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .btn-danger-ghost {
-  color: var(--danger);
-  border: 1px solid var(--danger-soft);
-  border-radius: 6px;
-  padding: 0.3rem 0.6rem;
+  color: #ffd1da;
+  border: 1px solid rgba(255, 122, 144, 0.5);
+  border-radius: 10px;
+  padding: 0.3rem 0.65rem;
   font-size: 0.78rem;
-  background: var(--danger-soft);
+  font-weight: 600;
+  background: rgba(40, 8, 20, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-.btn-danger-ghost:hover { background: #eecccc; }
+.btn-danger-ghost:hover { background: rgba(255, 90, 120, 0.35); }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Breadcrumbs, inputs
+   -------------------------------------------------------------------------- */
 .crumb {
   color: var(--ink-soft);
   font-size: 0.85rem;
 }
 .crumb a { color: var(--accent); text-decoration: none; }
-.crumb a:hover { text-decoration: underline; }
+.crumb a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 .field-input {
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 0.5rem 0.7rem;
-  font-size: 0.9rem;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.92rem;
   width: 100%;
-  background: var(--panel);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
+.field-input::placeholder { color: rgba(163, 168, 207, 0.65); }
 .field-input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(94, 227, 255, 0.18);
 }
 
+/* --------------------------------------------------------------------------
+   Photos, upload zones
+   -------------------------------------------------------------------------- */
 .photo-tile {
   position: relative;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
   background: var(--panel);
   aspect-ratio: 1 / 1;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+.photo-tile:hover {
+  border-color: rgba(94, 227, 255, 0.7);
+  box-shadow: 0 12px 34px -12px rgba(94, 227, 255, 0.55);
+  transform: translateY(-2px);
 }
 .photo-tile img {
   width: 100%;
@@ -135,31 +269,39 @@ body {
 }
 
 .dropzone {
-  border: 1.5px dashed var(--line);
-  border-radius: 10px;
+  border: 1.5px dashed rgba(94, 227, 255, 0.4);
+  border-radius: 16px;
   padding: 2rem 1rem;
   text-align: center;
   color: var(--ink-soft);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  background: rgba(94, 227, 255, 0.04);
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
+.dropzone p:first-child { color: var(--ink); }
+.dropzone:hover,
 .dropzone.dragging {
   border-color: var(--accent);
-  background: #f3f5f7;
+  background: rgba(94, 227, 255, 0.1);
+  box-shadow: 0 0 34px -10px rgba(94, 227, 255, 0.6);
 }
 
+/* --------------------------------------------------------------------------
+   Empty state, loading skeleton, toast
+   -------------------------------------------------------------------------- */
 .empty-state {
   border: 1px dashed var(--line);
-  border-radius: 10px;
+  border-radius: 16px;
   padding: 2.5rem 1rem;
   text-align: center;
   color: var(--ink-soft);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #e4e6e9 25%, #edeef0 37%, #e4e6e9 63%);
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.12) 37%, rgba(255,255,255,0.05) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
-  border-radius: 8px;
+  border-radius: 14px;
 }
 @keyframes shimmer {
   0% { background-position: 100% 50%; }
@@ -170,12 +312,36 @@ body {
   position: fixed;
   bottom: 1.25rem;
   right: 1.25rem;
-  background: var(--ink);
+  background: rgba(20, 18, 56, 0.92);
+  border: 1px solid rgba(94, 227, 255, 0.45);
   color: #fff;
-  padding: 0.65rem 1rem;
-  border-radius: 8px;
+  padding: 0.7rem 1.1rem;
+  border-radius: 12px;
   font-size: 0.85rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  font-weight: 600;
+  box-shadow: 0 10px 40px -8px rgba(0, 212, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 50;
 }
-.toast.error { background: var(--danger); }
+.toast.error {
+  background: rgba(60, 10, 28, 0.94);
+  border-color: rgba(255, 122, 144, 0.6);
+  box-shadow: 0 10px 40px -8px rgba(255, 61, 110, 0.5);
+}
+
+@media (max-width: 640px) {
+  .folder-card { padding: 1.35rem 1rem 1.1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Touch screens have no hover: always show the delete button on photos */
+@media (hover: none) {
+  .photo-tile .btn-danger-ghost { opacity: 1 !important; }
+}
