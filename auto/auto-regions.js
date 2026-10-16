@@ -1,8 +1,9 @@
 import { supabase } from "./supabase-client.js";
-import { el, showToast, slugify, friendlyError } from "./ui-utils.js";
+import { el, showToast, slugify, friendlyError, downloadGroupsAsZip } from "./ui-utils.js";
 
 const grid = document.getElementById("regions-grid");
 const addBtn = document.getElementById("add-region-btn");
+const downloadAllBtn = document.getElementById("download-all-zip-btn");
 
 async function loadRegions() {
   const { data: regions, error } = await supabase
@@ -77,4 +78,155 @@ addBtn.addEventListener("click", async () => {
   loadRegions();
 });
 
+downloadAllBtn.addEventListener("click", async () => {
+  downloadAllBtn.disabled = true;
+  const originalText = downloadAllBtn.textContent;
+  downloadAllBtn.textContent = "Se pregătește arhiva…";
+
+  try {
+    const { data: regions, error: regionsError } = await supabase
+      .from("regions")
+      .select("id, name")
+      .order("sort_order", { ascending: true });
+
+    if (regionsError || !regions || regions.length === 0) {
+      showToast("Nu există regiuni de descărcat.", { error: true });
+      return;
+    }
+
+    const groups = [];
+    for (const region of regions) {
+      const { data: vehicles } = await supabase
+        .from("auto_vehicles")
+        .select("id, vehicle_number")
+        .eq("region_id", region.id);
+
+      for (const vehicle of vehicles || []) {
+        const { data: photos } = await supabase
+          .from("auto_vehicle_photos")
+          .select("storage_path, file_name")
+          .eq("vehicle_id", vehicle.id);
+
+        if (!photos || photos.length === 0) continue;
+
+        const paths = photos.map((p) => p.storage_path);
+        const { data: signed } = await supabase.storage.from("auto-photos").createSignedUrls(paths, 300);
+        if (!signed) continue;
+
+        const urlByPath = {};
+        for (const s of signed) if (s.signedUrl) urlByPath[s.path] = s.signedUrl;
+
+        const files = photos
+          .filter((p) => urlByPath[p.storage_path])
+          .map((p, i) => ({ url: urlByPath[p.storage_path], fileName: p.file_name || `poza-${i + 1}.jpg` }));
+
+        if (files.length > 0) groups.push({ folderName: `${region.name}/${vehicle.vehicle_number}`, files });
+      }
+    }
+
+    if (groups.length === 0) {
+      showToast("Nicio poză de descărcat.", { error: true });
+      return;
+    }
+
+    await downloadGroupsAsZip({
+      zipFileName: "Auto.zip",
+      groups,
+      onProgress: (done, total) => { downloadAllBtn.textContent = `Se descarcă ${done}/${total}…`; },
+    });
+
+    showToast("Arhiva a fost descărcată.");
+  } catch (err) {
+    showToast(friendlyError(err), { error: true });
+  } finally {
+    downloadAllBtn.disabled = false;
+    downloadAllBtn.textContent = originalText;
+  }
+});
+
 loadRegions();
+
+// ---------------------------------------------------------------------------
+// Search a vehicle by plate number and show which region it is in.
+// Matching ignores case, dashes and spaces: "b152krk", "B 152" and "152" all
+// find B-152-KRK. The vehicle list is small, so it is loaded once and
+// filtered in the browser.
+// ---------------------------------------------------------------------------
+const searchInput = document.getElementById("vehicle-search");
+const searchResults = document.getElementById("search-results");
+const MAX_RESULTS = 30;
+let allVehicles = null; // loaded on first search
+
+const normalize = (text) => text.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+async function ensureVehiclesLoaded() {
+  if (allVehicles) return true;
+  const { data, error } = await supabase
+    .from("auto_vehicles")
+    .select("id, vehicle_number, verified, regions(name, slug)");
+  if (error) {
+    showToast(friendlyError(error), { error: true });
+    return false;
+  }
+  allVehicles = (data || []).map((v) => ({ ...v, key: normalize(v.vehicle_number) }));
+  return true;
+}
+
+function renderSearchResults(matches, query) {
+  searchResults.innerHTML = "";
+
+  if (matches.length === 0) {
+    searchResults.appendChild(
+      el("div", { class: "empty-state col-span-full" }, [
+        el("p", { class: "font-medium mb-1", text: "Nicio mașină găsită" }),
+        el("p", { class: "text-sm", text: `Nu există niciun număr care conține „${query}".` }),
+      ])
+    );
+    return;
+  }
+
+  for (const vehicle of matches.slice(0, MAX_RESULTS)) {
+    const slug = vehicle.regions?.slug || "";
+    searchResults.appendChild(
+      el(
+        "a",
+        {
+          href: `vehicle.html?id=${encodeURIComponent(vehicle.id)}&region=${encodeURIComponent(slug)}`,
+          class: "folder-card block",
+        },
+        [
+          el("div", { class: "flex items-center justify-between mb-4" }, [
+            el("span", { class: "chip", text: vehicle.regions?.name || "Fără regiune" }),
+            el("span", {
+              class: "text-xs text-[var(--ink-soft)]",
+              text: vehicle.verified ? "verificată ✓" : "neverificată",
+            }),
+          ]),
+          el("h2", { class: "font-display text-xl font-semibold", text: vehicle.vehicle_number }),
+        ]
+      )
+    );
+  }
+}
+
+let searchTimer = null;
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    const query = searchInput.value.trim();
+    const key = normalize(query);
+
+    if (!key) {
+      searchResults.classList.add("hidden");
+      searchResults.innerHTML = "";
+      grid.classList.remove("hidden");
+      return;
+    }
+
+    if (!(await ensureVehiclesLoaded())) return;
+
+    grid.classList.add("hidden");
+    searchResults.classList.remove("hidden");
+    renderSearchResults(allVehicles.filter((v) => v.key.includes(key)), query);
+  }, 150);
+});
