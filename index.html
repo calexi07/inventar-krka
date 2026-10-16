@@ -3,43 +3,37 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Auto — Regiuni</title>
+<title>Inventar Companie</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<link rel="stylesheet" href="../css/styles.css" />
+<link rel="stylesheet" href="css/styles.css" />
 </head>
-<body class="min-h-screen px-6 py-8">
-  <div class="max-w-5xl mx-auto">
-    <nav class="crumb mb-6"><a href="../index.html">Inventar</a> / Auto</nav>
-
-    <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
-      <div>
-        <h1 class="font-display text-3xl font-semibold">Regiuni Auto</h1>
-        <p class="text-[var(--ink-soft)] text-sm mt-1">Alege o regiune pentru a vedea mașinile.</p>
-      </div>
-      <div class="flex items-center gap-2 flex-wrap">
-        <button id="add-region-btn" class="btn-ghost">+ Regiune nouă</button>
-        <button id="download-all-zip-btn" class="btn-primary">Descarcă tot (ZIP)</button>
-      </div>
+<body class="min-h-screen flex items-center justify-center px-6">
+  <main class="w-full max-w-3xl">
+    <div class="mb-10 text-center">
+      <p class="chip mb-3">Inventar intern</p>
+      <h1 class="font-display text-4xl font-semibold">Ce vrei să gestionezi?</h1>
+      <p class="text-[var(--ink-soft)] mt-2">Alege un modul pentru a continua.</p>
     </div>
 
-    <div class="mb-8">
-      <label for="vehicle-search" class="sr-only">Caută mașină după număr</label>
-      <input id="vehicle-search" type="search" autocomplete="off" class="field-input !py-3.5 !text-base"
-             placeholder="Caută o mașină după număr (ex: B-152-KRK sau 152)…" />
+    <div class="grid sm:grid-cols-2 gap-5">
+      <a href="it/index.html" class="folder-card block focus-visible:outline-none">
+        <div class="flex items-center justify-between mb-6">
+          <span class="chip">Echipamente</span>
+        </div>
+        <h2 class="font-display text-2xl font-semibold mb-1">IT</h2>
+        <p class="text-sm text-[var(--ink-soft)]">Laptopuri, telefoane, monitoare — organizate pe regiuni și angajați.</p>
+      </a>
+
+      <a href="auto/index.html" class="folder-card block focus-visible:outline-none">
+        <div class="flex items-center justify-between mb-6">
+          <span class="chip">Flotă</span>
+        </div>
+        <h2 class="font-display text-2xl font-semibold mb-1">Auto</h2>
+        <p class="text-sm text-[var(--ink-soft)]">Mașini de companie, organizate pe regiuni.</p>
+      </a>
     </div>
-
-    <div id="search-results" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 hidden"></div>
-
-    <div id="regions-grid" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-      <div class="skeleton h-28"></div>
-      <div class="skeleton h-28"></div>
-      <div class="skeleton h-28"></div>
-    </div>
-  </div>
-
-  <script type="module" src="../js/auto-regions.js"></script>
+  </main>
 </body>
 </html>
