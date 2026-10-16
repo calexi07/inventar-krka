@@ -145,3 +145,88 @@ downloadAllBtn.addEventListener("click", async () => {
 });
 
 loadRegions();
+
+// ---------------------------------------------------------------------------
+// Search a vehicle by plate number and show which region it is in.
+// Matching ignores case, dashes and spaces: "b152krk", "B 152" and "152" all
+// find B-152-KRK. The vehicle list is small, so it is loaded once and
+// filtered in the browser.
+// ---------------------------------------------------------------------------
+const searchInput = document.getElementById("vehicle-search");
+const searchResults = document.getElementById("search-results");
+const MAX_RESULTS = 30;
+let allVehicles = null; // loaded on first search
+
+const normalize = (text) => text.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+async function ensureVehiclesLoaded() {
+  if (allVehicles) return true;
+  const { data, error } = await supabase
+    .from("auto_vehicles")
+    .select("id, vehicle_number, verified, regions(name, slug)");
+  if (error) {
+    showToast(friendlyError(error), { error: true });
+    return false;
+  }
+  allVehicles = (data || []).map((v) => ({ ...v, key: normalize(v.vehicle_number) }));
+  return true;
+}
+
+function renderSearchResults(matches, query) {
+  searchResults.innerHTML = "";
+
+  if (matches.length === 0) {
+    searchResults.appendChild(
+      el("div", { class: "empty-state col-span-full" }, [
+        el("p", { class: "font-medium mb-1", text: "Nicio mașină găsită" }),
+        el("p", { class: "text-sm", text: `Nu există niciun număr care conține „${query}".` }),
+      ])
+    );
+    return;
+  }
+
+  for (const vehicle of matches.slice(0, MAX_RESULTS)) {
+    const slug = vehicle.regions?.slug || "";
+    searchResults.appendChild(
+      el(
+        "a",
+        {
+          href: `vehicle.html?id=${encodeURIComponent(vehicle.id)}&region=${encodeURIComponent(slug)}`,
+          class: "folder-card block",
+        },
+        [
+          el("div", { class: "flex items-center justify-between mb-4" }, [
+            el("span", { class: "chip", text: vehicle.regions?.name || "Fără regiune" }),
+            el("span", {
+              class: "text-xs text-[var(--ink-soft)]",
+              text: vehicle.verified ? "verificată ✓" : "neverificată",
+            }),
+          ]),
+          el("h2", { class: "font-display text-xl font-semibold", text: vehicle.vehicle_number }),
+        ]
+      )
+    );
+  }
+}
+
+let searchTimer = null;
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    const query = searchInput.value.trim();
+    const key = normalize(query);
+
+    if (!key) {
+      searchResults.classList.add("hidden");
+      searchResults.innerHTML = "";
+      grid.classList.remove("hidden");
+      return;
+    }
+
+    if (!(await ensureVehiclesLoaded())) return;
+
+    grid.classList.add("hidden");
+    searchResults.classList.remove("hidden");
+    renderSearchResults(allVehicles.filter((v) => v.key.includes(key)), query);
+  }, 150);
+});
