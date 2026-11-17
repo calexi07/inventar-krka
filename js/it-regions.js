@@ -98,7 +98,7 @@ downloadAllBtn.addEventListener("click", async () => {
     for (const region of regions) {
       const { data: employees } = await supabase
         .from("it_employees")
-        .select("id, full_name")
+        .select("id, full_name, notes")
         .eq("region_id", region.id);
 
       for (const emp of employees || []) {
@@ -107,25 +107,26 @@ downloadAllBtn.addEventListener("click", async () => {
           .select("storage_path, file_name")
           .eq("employee_id", emp.id);
 
-        if (!photos || photos.length === 0) continue;
+        
 
-        const paths = photos.map((p) => p.storage_path);
-        const { data: signed } = await supabase.storage.from("it-photos").createSignedUrls(paths, 300);
+        const photoRows = photos || [];
+      const paths = photoRows.map((p) => p.storage_path);
+        const { data: signed } = paths.length ? await supabase.storage.from("it-photos").createSignedUrls(paths, 300) : { data: [] };
         if (!signed) continue;
 
         const urlByPath = {};
         for (const s of signed) if (s.signedUrl) urlByPath[s.path] = s.signedUrl;
 
-        const files = photos
+        const files = photoRows
           .filter((p) => urlByPath[p.storage_path])
           .map((p, i) => ({ url: urlByPath[p.storage_path], fileName: p.file_name || `poza-${i + 1}.jpg` }));
 
-        if (files.length > 0) groups.push({ folderName: `${region.name}/${emp.full_name}`, files });
+        if (files.length > 0 || (emp.notes || "").trim()) groups.push({ folderName: `${region.name}/${emp.full_name}`, files, notes: emp.notes });
       }
     }
 
     if (groups.length === 0) {
-      showToast("Nicio poză de descărcat.", { error: true });
+      showToast("Nicio poză sau notiță de descărcat.", { error: true });
       return;
     }
 
