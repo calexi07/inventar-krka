@@ -43,7 +43,8 @@ export function friendlyError(err) {
 /**
  * Downloads a set of file groups (e.g. one group per employee/vehicle) as a
  * single ZIP, with each group becoming a folder inside the archive.
- * groups: [{ folderName: string, files: [{ url: string, fileName: string }] }]
+ * groups: [{ folderName: string, files: [{ url, fileName }], notes?: string }]
+ * When a group has notes, they are saved as "notite.txt" inside its folder.
  */
 export async function downloadGroupsAsZip({ zipFileName, groups, onProgress }) {
   const zip = new JSZip();
@@ -51,6 +52,11 @@ export async function downloadGroupsAsZip({ zipFileName, groups, onProgress }) {
   let done = 0;
 
   for (const group of groups) {
+    const notes = (group.notes || "").trim();
+    if (notes) {
+      // BOM + CRLF so Windows Notepad shows Romanian characters correctly
+      zip.file(`${group.folderName}/notite.txt`, "\uFEFF" + notes.replace(/\r?\n/g, "\r\n"));
+    }
     for (const file of group.files) {
       const response = await fetch(file.url);
       const blob = await response.blob();
