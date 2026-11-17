@@ -41,7 +41,7 @@ async function loadRegionAndVehicles() {
 
   const { data: vehicles, error } = await supabase
     .from("auto_vehicles")
-    .select("id, vehicle_number, verified")
+    .select("id, vehicle_number, verified, notes")
     .eq("region_id", region.id)
     .order("vehicle_number", { ascending: true });
 
@@ -129,24 +129,25 @@ downloadBtn.addEventListener("click", async () => {
         .select("storage_path, file_name")
         .eq("vehicle_id", vehicle.id);
 
-      if (error || !photos || photos.length === 0) continue;
+      if (error) continue;
 
-      const paths = photos.map((p) => p.storage_path);
-      const { data: signed } = await supabase.storage.from("auto-photos").createSignedUrls(paths, 300);
+      const photoRows = photos || [];
+      const paths = photoRows.map((p) => p.storage_path);
+      const { data: signed } = paths.length ? await supabase.storage.from("auto-photos").createSignedUrls(paths, 300) : { data: [] };
       if (!signed) continue;
 
       const urlByPath = {};
       for (const s of signed) if (s.signedUrl) urlByPath[s.path] = s.signedUrl;
 
-      const files = photos
+      const files = photoRows
         .filter((p) => urlByPath[p.storage_path])
         .map((p, i) => ({ url: urlByPath[p.storage_path], fileName: p.file_name || `poza-${i + 1}.jpg` }));
 
-      if (files.length > 0) groups.push({ folderName: vehicle.vehicle_number, files });
+      if (files.length > 0 || (vehicle.notes || "").trim()) groups.push({ folderName: vehicle.vehicle_number, files, notes: vehicle.notes });
     }
 
     if (groups.length === 0) {
-      showToast("Nicio poză de descărcat în această regiune.", { error: true });
+      showToast("Nicio poză sau notiță de descărcat în această regiune.", { error: true });
       return;
     }
 
