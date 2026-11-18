@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IT — Import în masă</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="min-h-screen px-6 py-8">
+  <div class="max-w-5xl mx-auto">
+    <nav class="crumb mb-6"><a href="../index.html">Inventar</a> / <a href="index.html">IT</a> / Import în masă</nav>
+
+    <div class="mb-6">
+      <h1 class="font-display text-3xl font-semibold">Import în masă</h1>
+      <p class="text-[var(--ink-soft)] text-sm mt-1 max-w-2xl">
+        Alege un folder (sau una ori mai multe arhive ZIP) în care fiecare angajat are folderul lui cu poze.
+        Structura poate fi <code>Nume angajat/poze</code> sau <code>Regiune/Nume angajat/poze</code> —
+        aceeași ca la „Descarcă tot (ZIP)”.
+      </p>
+    </div>
+
+    <div class="mb-6 flex flex-col sm:flex-row gap-3">
+      <label for="folder-input" class="dropzone flex-1 cursor-pointer flex flex-col items-center justify-center">
+        <p class="font-medium">Alege un folder</p>
+        <p class="text-xs mt-1">Recomandat pentru multe poze — dezarhivează întâi ZIP-urile în același loc</p>
+        <input id="folder-input" type="file" webkitdirectory multiple class="hidden" />
+      </label>
+      <label for="zip-input" class="dropzone flex-1 cursor-pointer flex flex-col items-center justify-center">
+        <p class="font-medium">Alege arhive ZIP</p>
+        <p class="text-xs mt-1">Se pot alege mai multe; arhivele foarte mari consumă multă memorie</p>
+        <input id="zip-input" type="file" accept=".zip,application/zip" multiple class="hidden" />
+      </label>
+    </div>
+
+    <div id="source-status" class="text-sm text-[var(--ink-soft)] mb-4"></div>
+
+    <div id="review" class="hidden">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+        <div class="flex items-center gap-2 flex-wrap" id="summary-chips"></div>
+        <div class="flex items-center gap-4 flex-wrap">
+          <label class="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <input id="compress-checkbox" type="checkbox" class="w-4 h-4 accent-[var(--accent)]" />
+            <span>Micșorează pozele (max. 2560 px)</span>
+          </label>
+          <button id="reset-btn" class="btn-ghost">Golește</button>
+          <button id="start-btn" class="btn-primary">Încarcă pozele</button>
+        </div>
+      </div>
+
+      <div id="progress-wrap" class="hidden mb-4">
+        <div class="h-2 rounded-full bg-[var(--panel)] overflow-hidden border border-[var(--line)]">
+          <div id="progress-bar" class="h-full" style="width:0%;background:linear-gradient(110deg,var(--glow-a),var(--glow-b));transition:width .2s ease"></div>
+        </div>
+        <p id="progress-text" class="text-xs text-[var(--ink-soft)] mt-1.5"></p>
+      </div>
+
+      <div id="rows" class="flex flex-col gap-2"></div>
+
+      <div id="errors-wrap" class="hidden mt-6">
+        <h2 class="font-display text-lg font-semibold mb-2">Poze care nu s-au încărcat</h2>
+        <ul id="errors-list" class="text-sm text-[var(--ink-soft)] list-disc pl-5 space-y-1"></ul>
+        <p class="text-xs text-[var(--ink-soft)] mt-2">Apasă din nou „Încarcă pozele” ca să reîncerci — cele deja încărcate sunt sărite automat.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/it-import.js"></script>
+</body>
+</html>
