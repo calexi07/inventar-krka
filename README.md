@@ -29,6 +29,7 @@ it/
   index.html                Region grid (IT)
   region.html                Employee list for a region
   employee.html               Employee detail — photo gallery + upload
+  import.html                 Bulk import — folder/ZIP of per-employee photo folders
 js/
   config.example.js          Template for Supabase credentials (copy → config.js)
   supabase-client.js         Shared Supabase client
@@ -36,6 +37,8 @@ js/
   it-regions.js               Logic for it/index.html
   it-employees.js             Logic for it/region.html
   it-employee-detail.js       Logic for it/employee.html
+  it-import.js                Logic for it/import.html
+  it-import-match.js          Pure helpers: folder → employee/region matching
 css/
   styles.css                  Design tokens + folder-card component
 supabase/
@@ -101,3 +104,14 @@ supabase/
   (`on delete cascade` handles that automatically); a region *can't* be
   deleted while employees still reference it (`on delete restrict`) —
   reassign or remove employees first.
+
+## Bulk import (IT)
+
+`it/import.html` uploads many employees' photos in one go. Pick a folder
+(or one or more ZIP files) laid out as `Employee name/photos` or
+`Region/Employee name/photos` — the same layout **Descarcă tot (ZIP)**
+produces. Folder names are matched to employees ignoring case, diacritics,
+hyphens and word order; anything not matched exactly is shown for review
+before upload, and unknown names can be created as new employees. Photos
+whose file name already exists for that employee are skipped, so a run can
+be safely repeated after an interruption.
