@@ -133,7 +133,7 @@ downloadBtn.addEventListener("click", async () => {
 
       const photoRows = photos || [];
       const paths = photoRows.map((p) => p.storage_path);
-      const { data: signed } = paths.length ? await supabase.storage.from("it-photos").createSignedUrls(paths, 300) : { data: [] };
+      const { data: signed } = paths.length ? await supabase.storage.from("it-photos").createSignedUrls(paths, 3600) : { data: [] };
       if (!signed) continue;
 
       const urlByPath = {};
@@ -151,13 +151,18 @@ downloadBtn.addEventListener("click", async () => {
       return;
     }
 
-    await downloadGroupsAsZip({
+    const zipResult = await downloadGroupsAsZip({
       zipFileName: `${currentRegion.name}.zip`,
       groups,
       onProgress: (done, total) => { downloadBtn.textContent = `Se descarcă ${done}/${total}…`; },
     });
 
-    showToast("Arhiva a fost descărcată.");
+    showToast(
+      zipResult.failed
+        ? `Arhiva a fost descărcată, dar ${zipResult.failed} poze nu s-au putut include (vezi _ERORI.txt).`
+        : "Arhiva a fost descărcată.",
+      { error: zipResult.failed > 0 }
+    );
   } catch (err) {
     showToast(friendlyError(err), { error: true });
   } finally {
