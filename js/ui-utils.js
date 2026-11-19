@@ -3,7 +3,7 @@ export function showToast(message, { error = false } = {}) {
   el.className = "toast" + (error ? " error" : "");
   el.textContent = message;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 3200);
+  setTimeout(() => el.remove(), error ? 9000 : 3200);
 }
 
 export function el(tag, attrs = {}, children = []) {
@@ -35,9 +35,10 @@ export function slugify(text) {
 
 export function friendlyError(err) {
   console.error(err);
-  if (err?.code === "23505") return "That name already exists here.";
-  if (err?.message?.includes("Failed to fetch")) return "Network problem — check your connection and try again.";
-  return "Something went wrong. Please try again.";
+  if (err?.code === "23505") return "Acest nume există deja aici.";
+  if (err?.message?.includes("Failed to fetch")) return "Problemă de rețea — verifică conexiunea și încearcă din nou.";
+  const detail = err?.message ? ` Detalii: ${err.message}` : "";
+  return "Ceva nu a mers. Încearcă din nou." + detail;
 }
 
 const ZIP_PARALLEL_DOWNLOADS = 5;
